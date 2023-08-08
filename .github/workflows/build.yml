@@ -20,8 +20,10 @@ jobs:
       id: go
 
     - name: Build
+      env:
+        CGO_ENABLED: 0
       run: |
-        CGO_ENABLED=O go build -o spitfire-build-kernel ./cmd/spitfire-build-kernel/main.go
+        go build -o spitfire-build-kernel ./cmd/spitfire-build-kernel/main.go
         file spitfire-build-kernel
 
     #- name: Build Container Image
