@@ -26,11 +26,11 @@ jobs:
         go build -o spitfire-build-kernel ./cmd/spitfire-build-kernel/main.go
         file spitfire-build-kernel
 
-    #- name: Build Container Image
-    #  run: |
-    #    ./spitfire-build-kernel -arch x86_64 -build-image
+    - name: Build Container Image
+      run: |
+        ./spitfire-build-kernel -arch x86_64 -build-image
         
 
-    #- name: Run Container and build kernel
-    #  run: |
-    #    ./spitfire-build-kernel -arch x86_64 -run-container
+    - name: Run Container and build kernel
+      run: |
+        ./spitfire-build-kernel -arch x86_64 -run-container
