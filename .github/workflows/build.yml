@@ -22,11 +22,12 @@ jobs:
     - name: Build
       run: |
         CGO_ENABLED=O go build -o spitfire-build-kernel ./cmd/spitfire-build-kernel/main.go
-
-    - name: Build Container Image
-      run: |
-        ./spitfire-build-kernel -arch x86_64 -build-image
         file spitfire-build-kernel
+
+    #- name: Build Container Image
+    #  run: |
+    #    ./spitfire-build-kernel -arch x86_64 -build-image
+        
 
     #- name: Run Container and build kernel
     #  run: |
