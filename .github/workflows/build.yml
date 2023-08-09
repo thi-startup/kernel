@@ -35,9 +35,9 @@ jobs:
         ./spitfire-build-kernel -arch x86_64 -run-container
         gzip -c /tmp/kernel.image/vmlinux >> vmlinuz
         
-    - name: Upload release binary
-      uses: shopify/upload-to-release@v1.0.1
-      with:
-        name: vmlinuz
-        path: ./vmlinuz
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload kernel
+      run: |
+        git config user.name spitfire-kernel-builder && git config user.email kernelbuilder@spitfire.com
+        git branch kernel && git switch kernel
+        git add vmlinuz && git commit -m "update kernel build"
+        git push -u origin kernel
