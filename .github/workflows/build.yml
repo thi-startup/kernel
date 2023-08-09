@@ -36,7 +36,7 @@ jobs:
         gzip -c /tmp/kernel.image/vmlinux >> vmlinuz
         
     - name: Upload release binary
-      uses: shopify/upload-to-releases@v1.0.1
+      uses: shopify/upload-to-release@v1.0.1
       with:
         name: vmlinuz
         path: ./vmlinuz
