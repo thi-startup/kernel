@@ -31,12 +31,14 @@ jobs:
 
     - name: Run Container and build kernel
       run: gzip -c /etc/hosts >> vmlinuz
-        #./spitfire-build-kernel -arch x86_64 -run-container
-        
+        #./spitfire-build-kernel -arch x86_64 -run-container       
         
     - name: Upload kernel
-      run: |
-        git config user.name Joe-Degs && git config user.email jpedegs8990@gmail.com
-        git branch kernel && git switch kernel
-        git add vmlinuz && git commit -m "update kernel build"
-        git push -u origin kernel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./vmlinuz
+        asset_name: vmliuz
+        asset_content_type: application/octet-stream
