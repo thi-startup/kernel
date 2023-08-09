@@ -24,20 +24,19 @@ jobs:
         CGO_ENABLED: 0
       run: |
         go build -o spitfire-build-kernel ./cmd/spitfire-build-kernel/main.go
-        file spitfire-build-kernel
 
     - name: Build Container Image
-      run: |
-        ./spitfire-build-kernel -arch x86_64 -build-image       
+      run: echo hello
+        #./spitfire-build-kernel -arch x86_64 -build-image       
 
     - name: Run Container and build kernel
-      run: |
-        ./spitfire-build-kernel -arch x86_64 -run-container
-        gzip -c /tmp/kernel.image/vmlinux >> vmlinuz
+      run: gzip -c /etc/hosts >> vmlinuz
+        #./spitfire-build-kernel -arch x86_64 -run-container
+        
         
     - name: Upload kernel
       run: |
-        git config user.name spitfire-kernel-builder && git config user.email kernelbuilder@spitfire.com
+        git config user.name Joe-Degs && git config user.email jpedegs8990@gmail.com
         git branch kernel && git switch kernel
         git add vmlinuz && git commit -m "update kernel build"
         git push -u origin kernel
