@@ -18,16 +18,20 @@ import (
 )
 
 var (
+	listVersions = flag.Bool("list-versions", false, "List kernel versions")
+	version      = flag.String("version", "6.1", "Version of kernel to build")
 	arch         = flag.String("arch", "x86_64", "Architecture to compile kernel for, supported archs: x86_64")
 	buildImage   = flag.Bool("build-image", false, "Build container that builds kernel")
 	runContainer = flag.Bool("run-container", false, "Run image tagged spitfire-build-kernel")
 	buildKernel  = flag.Bool("build-kernel", false, "Build the linux kernel")
 
+	versions = [...]string{"4.14", "5.10", "6.1"}
+
 	// see https://www.kernel.org/releases.json
-	latest = "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.10.188.tar.xz"
+	kernelFmt = "https://cdn.kernel.org/pub/linux/kernel/v%s.x/linux-%s.tar.xz"
 
 	// got this from the `resources` subdirectory in github.com/firecracker-microvm/firecracker
-	config = "https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/resources/guest_configs/microvm-kernel-x86_64-5.10.config"
+	configFmt = "https://raw.githubusercontent.com/firecracker-microvm/firecracker/main/resources/guest_configs/microvm-kernel-ci-x86_64-%s.config"
 )
 
 // this process in the docker container is passed the argument `-build-kernel`
@@ -250,8 +254,36 @@ func dockerImage(workdir string) error {
 	return nil
 }
 
+func contains(s []string, v string) bool {
+	for _, ver := range s {
+		if v == ver {
+			return true
+		}
+	}
+	return false
+}
+
+// takes the config version and then returns url for downloading both kernel
+// and firecracker kernel config
+func urls(ver string) (string, string) {
+	part := strings.Split(ver, ".")[0]
+	return fmt.Sprintf(kernelFmt, part, ver), fmt.Sprintf(configFmt, ver)
+}
+
 func main() {
 	flag.Parse()
+
+	if !contains(versions[:], *version) {
+		log.Fatalf("version is one of the following: %s", versions)
+	}
+
+	if *listVersions {
+		fmt.Printf("Versions\n")
+		fmt.Printf("========\n")
+		for ii, ver := range versions {
+			fmt.Printf("%d. %s\n", ii+1, ver)
+		}
+	}
 
 	workdir, err := os.MkdirTemp(os.TempDir(), "spitfire-build-dir")
 	if err != nil {
@@ -316,18 +348,19 @@ func main() {
 
 	// this part runs in the container tagged `spitfire-build-kernel`
 	if *buildKernel {
-		kernel := filepath.Base(latest)
+		kernelUrl, configUrl := urls(*version)
+		kernel := filepath.Base(kernelUrl)
 		ksrc := strings.TrimSuffix(kernel, ".tar.xz")
-		kernelConfig := filepath.Base(config)
+		kernelConfig := filepath.Base(configUrl)
 
 		if !exists(kernel) {
 			log.Printf("downloading the kernel source -> %s", kernel)
-			if err := download(latest, kernel); err != nil {
+			if err := download(kernelUrl, kernel); err != nil {
 				log.Fatal(fmt.Errorf("failed to download kernel: %w", err))
 			}
 
 			log.Printf("downloading kernel config -> %s", kernelConfig)
-			if err := download(config, kernelConfig); err != nil {
+			if err := download(configUrl, kernelConfig); err != nil {
 				log.Fatal(fmt.Errorf("failed to download kernel config: %w", err))
 			}
 		}
@@ -342,7 +375,7 @@ func main() {
 
 		configDest := filepath.Join(ksrc, "kernel.config")
 		log.Printf("copying kernel config -> %s", configDest)
-		if err := copyFile(filepath.Base(config), configDest); err != nil {
+		if err := copyFile(filepath.Base(configUrl), configDest); err != nil {
 			log.Fatal(fmt.Errorf("failed to copy kernel.config: %w", err))
 		}
 
